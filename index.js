@@ -27,7 +27,7 @@ app.get("/books", (request, response) => {
 app.get("/books/:id", (request, response) => {
   const book = books.find((b) => b.id === request.params.id);
   if (!book) {
-    response.status(404).send({ error: "Book not found" });
+    response.status(404).send({ error: "Book notfound" });
   } else {
     response.send(book);
   }
@@ -36,12 +36,12 @@ app.get("/books/:id", (request, response) => {
 app.post("/books", (request, response) => {
   const { id, title, details } = request.body;
   if (!id || !title || !details || !validateBookDetails(details)) {
-    response.status(400).send({ error: "Missing or invalid book details" });
+    response.status(400).send({ error: "Missing details" });
   } else if (books.some((b) => b.id === id)) {
     response.status(400).send({ error: "Book already exists" });
   } else {
     books.push({ id, title, details });
-    response.status(201).send({ message: "Book added successfully" });
+    response.status(201).send({ message: "Book added successfully :)" });
   }
 });
 
@@ -54,12 +54,12 @@ app.put("/books/:id", (request, response) => {
     if (title) book.title = title;
     if (details) {
       if (!validateBookDetails(details)) {
-        response.status(400).send({ error: "Invalid book details" });
+        response.status(400).send({ error: "Invalid details" });
       } else {
         book.details = details;
       }
     }
-    response.send({ message: "Book updated successfully" });
+    response.send({ message: "Book updated successfully :))" });
   }
 });
 
@@ -69,7 +69,7 @@ app.delete("/books/:id", (request, response) => {
     response.status(404).send({ error: "Book not found" });
   } else {
     books.splice(index, 1);
-    response.send({ message: "Book deleted successfully" });
+    response.send({ message: "Book deleted successfully :(" });
   }
 });
 
@@ -80,10 +80,10 @@ app.post("/books/:id/details", (request, response) => {
   } else {
     const { id, author, genre, publicationYear } = request.body;
     if (!id || !author || !genre || !publicationYear) {
-      response.status(400).send({ error: "Missing detail fields" });
+      response.status(400).send({ error: "Missing required book details" });
     } else {
       book.details.push({ id, author, genre, publicationYear });
-      response.status(201).send({ message: "Detail added successfully" });
+      response.status(201).send({ message: "Book details added successfully" });
     }
   }
 });
@@ -95,10 +95,10 @@ app.delete("/books/:id/details/:detailId", (request, response) => {
   } else {
     const detailIndex = book.details.findIndex((d) => d.id === request.params.detailId);
     if (detailIndex === -1) {
-      response.status(404).send({ error: "Detail not found" });
+      response.status(404).send({ error: "Details not found" });
     } else {
       book.details.splice(detailIndex, 1);
-      response.send({ message: "Detail removed successfully" });
+      response.send({ message: "Removed successfully" });
     }
   }
 });
