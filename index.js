@@ -1,80 +1,108 @@
 const express = require("express");
 const app = express();
 app.use(express.json());
-const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
+const PORT = 3000;
 
 let books = [];
 
+const validateBookDetails = (details) => {
+  return details.every(
+    (detail) =>
+      detail.id && detail.author && detail.genre && detail.publicationYear
+  );
+};
 
-app.get("/whoami", (req, res) => {
-  res.json({ studentNumber: "2555497" });
+app.get("/whoami", (request, response) => {
+  const student = {
+    studentNumber: "2555497",
+  };
+  response.send(student);
 });
 
-
-app.get("/books", (req, res) => {
-  res.json(books);
+app.get("/books", (request, response) => {
+  response.send(books);
 });
 
-
-app.get("/books/:id", (req, res) => {
-  const book = books.find((b) => b.id === req.params.id);
-  if (!book) return res.status(404).json({ error: "Book not found" });
-  res.json(book);
-});
-
-
-app.post("/books", (req, res) => {
-  const { id, title, details } = req.body;
-  if (!id || !title || !details) {
-    return res.status(400).json({ error: "Missing book details" });
+app.get("/books/:id", (request, response) => {
+  const book = books.find((b) => b.id === request.params.id);
+  if (!book) {
+    response.status(404).send({ error: "Book not found" });
+  } else {
+    response.send(book);
   }
-  if (books.some((b) => b.id === id)) {
-    return res.status(400).json({ error: "Book  already exists" });
+});
+
+app.post("/books", (request, response) => {
+  const { id, title, details } = request.body;
+  if (!id || !title || !details || !validateBookDetails(details)) {
+    response.status(400).send({ error: "Missing or invalid book details" });
+  } else if (books.some((b) => b.id === id)) {
+    response.status(400).send({ error: "Book already exists" });
+  } else {
+    books.push({ id, title, details });
+    response.status(201).send({ message: "Book added successfully" });
   }
-  books.push({ id, title, details });
-  res.status(201).json({ message: "Book added " });
 });
 
-
-app.put("/books/:id", (req, res) => {
-  const book = books.find((b) => b.id === req.params.id);
-  if (!book) return res.status(404).json({ error: "Book not found" });
-  const { title, details } = req.body;
-  if (title) book.title = title;
-  if (details) book.details = details;
-  res.json({ message: "Book updated successfully" });
-});
-
-
-app.delete("/books/:id", (req, res) => {
-  const index = books.findIndex((b) => b.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: "Book not found" });
-  books.splice(index, 1);
-  res.json({ message: "Book deleted" });
-});
-
-
-app.post("/books/:id/details", (req, res) => {
-  const book = books.find((b) => b.id === req.params.id);
-  if (!book) return res.status(404).json({ error: "Book not found" });
-  const { id, author, genre, publicationYear } = req.body;
-  if (!id || !author || !genre || !publicationYear) {
-    return res.status(400).json({ error: "Missing detail fields" });
+app.put("/books/:id", (request, response) => {
+  const book = books.find((b) => b.id === request.params.id);
+  if (!book) {
+    response.status(404).send({ error: "Book not found" });
+  } else {
+    const { title, details } = request.body;
+    if (title) book.title = title;
+    if (details) {
+      if (!validateBookDetails(details)) {
+        response.status(400).send({ error: "Invalid book details" });
+      } else {
+        book.details = details;
+      }
+    }
+    response.send({ message: "Book updated successfully" });
   }
-  book.details.push({ id, author, genre, publicationYear });
-  res.status(201).json({ message: "yay" });
 });
 
-
-app.delete("/books/:id/details/:detailId", (req, res) => {
-  const book = books.find((b) => b.id === req.params.id);
-  if (!book) return res.status(404).json({ error: "Book not found" });
-  const detailIndex = book.details.findIndex((d) => d.id === req.params.detailId);
-  if (detailIndex === -1) return res.status(404).json({ error: "Detail not found" });
-  book.details.splice(detailIndex, 1);
-  res.json({ message: "Detail removed successfully" });
+app.delete("/books/:id", (request, response) => {
+  const index = books.findIndex((b) => b.id === request.params.id);
+  if (index === -1) {
+    response.status(404).send({ error: "Book not found" });
+  } else {
+    books.splice(index, 1);
+    response.send({ message: "Book deleted successfully" });
+  }
 });
 
+app.post("/books/:id/details", (request, response) => {
+  const book = books.find((b) => b.id === request.params.id);
+  if (!book) {
+    response.status(404).send({ error: "Book not found" });
+  } else {
+    const { id, author, genre, publicationYear } = request.body;
+    if (!id || !author || !genre || !publicationYear) {
+      response.status(400).send({ error: "Missing detail fields" });
+    } else {
+      book.details.push({ id, author, genre, publicationYear });
+      response.status(201).send({ message: "Detail added successfully" });
+    }
+  }
+});
+
+app.delete("/books/:id/details/:detailId", (request, response) => {
+  const book = books.find((b) => b.id === request.params.id);
+  if (!book) {
+    response.status(404).send({ error: "Book not found" });
+  } else {
+    const detailIndex = book.details.findIndex((d) => d.id === request.params.detailId);
+    if (detailIndex === -1) {
+      response.status(404).send({ error: "Detail not found" });
+    } else {
+      book.details.splice(detailIndex, 1);
+      response.send({ message: "Detail removed successfully" });
+    }
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
